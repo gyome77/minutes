@@ -1,0 +1,21 @@
+Flask>=2.0
+whisper>=1.0.0
+numpy
+scipy
+soundfile
+resemblyzer
+webrtcvad
+scikit-learn
+tqdm
+ffmpeg-python
+torch
+
+# Optional / heavy dependencies (install as needed)
+# whisperx (optional, improves timestamps/diarization integration)
+# pip install git+https://github.com/m-bain/whisperX.git
+# pyannote.audio (optional, higher-quality diarization; requires a HF token and extra setup)
+# pip install pyannote.audio
+# transformers (optional, for transformer summarization)
+# pip install transformers
+# hdbscan (optional, for speaker count estimation)
+# pip install hdbscan

@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Local Meeting Minutes</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; }
+      .box { border: 1px solid #ddd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; }
+      h2 { margin-top: 0; }
+      textarea { width: 100%; height: 8rem; }
+      .speaker { font-weight: bold; }
+      .segment { margin-bottom: .5rem; }
+      .meta { color: #555; font-size: 0.95rem; }
+      .warn { background: #fff3cd; border: 1px solid #ffeeba; padding: .5rem; border-radius:4px; margin-bottom:1rem; color:#856404; }
+    </style>
+  </head>
+  <body>
+    <h1>Local Meeting Minutes (whisper + diarization + summarizer)</h1>
+
+    <div class="box">
+      <form action="/transcribe" method="post" enctype="multipart/form-data">
+        <label>Audio file (mp3/m4a/wav):</label><br/>
+        <input type="file" name="audio" accept="audio/*" required /><br/><br/>
+
+        <label>Whisper model:</label>
+        <select name="model">
+          <option value="tiny">tiny</option>
+          <option value="base" selected>base</option>
+          <option value="small">small</option>
+          <option value="medium">medium</option>
+          <option value="large">large</option>
+        </select>
+
+        <label style="margin-left:1rem">Diarization method:</label>
+        <select name="diarize_method">
+          <option value="resemblyzer" selected>resemblyzer (lightweight)</option>
+          <option value="whisperx">whisperx (optional)</option>
+          <option value="pyannote">pyannote (optional)</option>
+        </select>
+
+        <label style="margin-left:1rem">Number of speakers (leave blank for auto or use estimate):</label>
+        <input type="number" name="num_speakers" min="1" style="width:4rem"/>
+
+        <br/><br/>
+        <label><input type="checkbox" name="auto_estimate"/> Auto-estimate speaker count (requires hdbscan/resemblyzer)</label>
+
+        <br/><br/>
+        <label>Summarizer:</label>
+        <select name="summarizer">
+          <option value="extractive" selected>Extractive (lightweight)</option>
+          <option value="transformer">Transformer (optional)</option>
+        </select>
+
+        <label style="margin-left:1rem">Transformer model:</label>
+        <input type="text" name="transformer_model" value="sshleifer/distilbart-cnn-12-6" style="width:30%"/>
+
+        <br/><br/>
+        <button type="submit">Transcribe & analyze</button>
+      </form>
+    </div>
+
+    {% if warnings %}
+      <div class="warn">
+        <strong>Warnings:</strong>
+        <ul>
+        {% for w in warnings %}
+          <li>{{ w }}</li>
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if result %}
+      <div class="box">
+        <h2>Executive summary</h2>
+        <div class="meta">Short extractive summary</div>
+        <p>{{ result.executive_summary }}</p>
+      </div>
+
+      {% if result.transformer_summary %}
+        <div class="box">
+          <h2>Transformer summary</h2>
+          <p>{{ result.transformer_summary }}</p>
+        </div>
+      {% endif %}
+
+      <div class="box">
+        <h2>Structured minutes</h2>
+        <div class="meta">Attendees: {{ result.minutes.attendees | join(', ') }}</div>
+        <h3>Agenda (heuristic matches)</h3>
+        {% if result.minutes.agenda %}
+          <ul>{% for a in result.minutes.agenda %}<li>{{ a }}</li>{% endfor %}</ul>
+        {% else %}
+          <p><i>No agenda-like lines detected.</i></p>
+        {% endif %}
+        <h3>Decisions</h3>
+        {% if result.minutes.decisions %}
+          <ul>{% for d in result.minutes.decisions %}<li>{{ d }}</li>{% endfor %}</ul>
+        {% else %}
+          <p><i>No decisions detected by heuristics.</i></p>
+        {% endif %}
+        <h3>Todos / Actions</h3>
+        {% if result.minutes.todos %}
+          <ul>{% for t in result.minutes.todos %}<li>{{ t }}</li>{% endfor %}</ul>
+        {% else %}
+          <p><i>No action items detected by heuristics.</i></p>
+        {% endif %}
+      </div>
+
+      <div class="box">
+        <h2>Full speakered transcript</h2>
+        <div class="meta">Timestamps are approximate</div>
+        {% for s in result.speakered_transcript %}
+          <div class="segment">
+            <div class="speaker">{{ s.speaker }} <span class="meta">[{{ '%.2f'|format(s.start) }} - {{ '%.2f'|format(s.end) }}]</span>:</div>
+            <div>{{ s.text }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="box">
+        <h2>Speaker segments (diarization approximation)</h2>
+        <ul>
+        {% for seg in result.speaker_segments %}
+          <li>{{ seg.speaker }}: {{ '%.2f'|format(seg.start) }} - {{ '%.2f'|format(seg.end) }}</li>
+        {% endfor %}
+        </ul>
+      </div>
+
+      <div class="box">
+        <h2>Longer summary</h2>
+        <p>{{ result.long_summary }}</p>
+      </div>
+    {% endif %}
+  </body>
+</html>
