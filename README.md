@@ -1,5 +1,4 @@
 ````markdown
-```markdown
 # Local Meeting Minutes (whisper + optional diarization + summarizer)
 
 This project provides a small local web app to transcribe meeting audio (mp3/m4a/wav) using Whisper, perform speaker diarization (multiple backends), and produce structured minutes (agenda / decisions / todos) and summaries.
