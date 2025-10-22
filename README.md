@@ -52,5 +52,4 @@ Notes and caveats
 If you'd like, I can:
 - Create a branch and open a pull request with these files (I couldn't push yet — your repo appears empty or inaccessible from my side).
 - Generate a patch file for easier application.
-```
 ````
